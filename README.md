@@ -1,1 +1,1 @@
-# libLinalg
+# libLattice
