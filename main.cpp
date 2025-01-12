@@ -1,6 +1,5 @@
 #include <iostream>
 #include "Linalg/Core"
-#include "Lattice/Core"
 
 int main()
 {
