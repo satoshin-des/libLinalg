@@ -5,6 +5,7 @@
 #include <vector>
 #include <cmath>
 #include <string>
+#include <time.h>
 
 namespace Linalg
 {
@@ -25,10 +26,10 @@ namespace Linalg
             return vector1.add(vector2);
         }
 
-        /// @brief
-        /// @param vector1
-        /// @param vector2
-        /// @return
+        /// @brief operator of defference of two vectors
+        /// @param vector1 vector
+        /// @param vector2 vector
+        /// @return defference of two vectors
         friend Vector<T> operator-(Vector<T> vector1, Vector<T> vector2)
         {
             return vector1.subtract(vector2);
@@ -74,10 +75,10 @@ namespace Linalg
             return vector.scalarMultiply(1.0 / num);
         }
 
-        /// @brief
-        /// @param vector
-        /// @param num
-        /// @return
+        /// @brief operator that computes element-wise mod
+        /// @param vector vector
+        /// @param num number
+        /// @return vector mod num
         friend Vector<T> operator%(Vector<T> vector, const int num)
         {
             if (num == 0)
@@ -182,11 +183,24 @@ namespace Linalg
         /// @return index-th component
         T at(const int index)
         {
-            if(index >= m_length)
+            if (index >= m_length)
             {
                 throw std::runtime_error("index " + std::to_string(index) + " is out of range");
             }
             return m_vector.at(index);
+        }
+
+        /// @brief function that sets seed of random by now time
+        void setSeed()
+        {
+            srand(static_cast<unsigned int>(time(NULL)));
+        }
+
+        /// @brief function that sets seed of random
+        /// @param seed seed
+        void setSeed(const unsigned int seed)
+        {
+            srand(seed);
         }
 
         /// @brief function that generates random vector
@@ -195,6 +209,22 @@ namespace Linalg
             for (int i = 0; i < m_length; ++i)
             {
                 m_vector.at(i) = rand();
+            }
+        }
+
+        /// @brief function that generates random vector
+        /// @param lower_bound lower bound of elements
+        /// @param upper_bound upper bound of elements
+        void random(const double lower_bound, const double upper_bound)
+        {
+            if (lower_bound > upper_bound)
+            {
+                throw std::runtime_error("lower bound is greater than upper bound");
+            }
+
+            for (int i = 0; i < m_length; ++i)
+            {
+                m_vector.at(i) = lower_bound + (upper_bound - lower_bound) * static_cast<double>(rand()) / RAND_MAX;
             }
         }
 
@@ -223,7 +253,7 @@ namespace Linalg
                 std::string error_massage = "sum of a vector whose length is " + std::to_string(m_length) + " and a vector whose length is " + std::to_string(vector.length()) + " is not defined.";
                 throw std::runtime_error(error_massage);
             }
-            
+
             Vector<T> added_vector;
             added_vector.setLength(m_length);
             for (int i = 0; i < m_length; ++i)

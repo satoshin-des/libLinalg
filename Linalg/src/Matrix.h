@@ -30,7 +30,7 @@ namespace Linalg
             Matrix<T> matrix;
             matrix.setDimension(matrix1.rows(), matrix2.columns());
 
-            for (int i = 0, j; i < matrix1.row(); ++i)
+            for (int i = 0, j; i < matrix1.rows(); ++i)
             {
                 for (j = 0; j < matrix2.columns(); ++j)
                 {
@@ -121,16 +121,72 @@ namespace Linalg
             return temp_matrix;
         }
 
-        friend Matrix<T> operator*=(Matrix<T>& matrix1, Matrix<T> matrix2)
+        friend Matrix<T> operator/(Matrix<T> matrix, const T num)
+        {
+            if (num == 0)
+            {
+                throw std::runtime_error("zero-division is not defined");
+            }
+
+            Matrix<T> temp_matrix;
+            temp_matrix.setDimension(matrix.rows(), matrix.columns());
+            for (int i = 0, j; i < matrix.rows(); ++i)
+            {
+                for (j = 0; j < matrix.columns(); ++j)
+                {
+                    temp_matrix.substitute(i, j, matrix.at(i, j) / num);
+                }
+            }
+            return temp_matrix;
+        }
+
+        friend Matrix<T> operator+=(Matrix<T> &matrix1, Matrix<T> matrix2)
+        {
+            matrix1 = matrix1 + matrix2;
+            return matrix1;
+        }
+
+        friend Matrix<T> operator*=(Matrix<T> &matrix1, Matrix<T> matrix2)
         {
             matrix1 = matrix1 * matrix2;
             return matrix1;
         }
 
-        friend Matrix<T> operator*=(Matrix<T>& matrix1, const T scalar)
+        friend Matrix<T> operator*=(Matrix<T> &matrix1, const T scalar)
         {
             matrix1 = matrix1 * scalar;
             return matrix1;
+        }
+
+        friend Matrix<T> operator/=(Matrix<T> &matrix, const T num)
+        {
+            matrix = matrix / num;
+            return matrix;
+        }
+
+        /// @brief function that computes n-th power of a matrix
+        /// @param n number
+        /// @return n-th power of a matrix
+        Matrix<T> power(const int n)
+        {
+            if (!isSquare())
+            {
+                throw std::runtime_error("power of non-square matrix is not defined");
+            }
+
+            Matrix<T> matrix, temp_matrix;
+            matrix.setIdentity(m_num_rows);
+            temp_matrix.substitute(m_matrix);
+
+            if (n > 0)
+            {
+                for (int i = 0; i < n; ++i)
+                {
+                    matrix *= temp_matrix;
+                }
+            }
+
+            return matrix;
         }
 
         /// @brief function that prints a matrix
@@ -146,6 +202,10 @@ namespace Linalg
             }
         }
 
+        /// @brief function that returns (``row_index``, ``column_index``)-element of a matrix
+        /// @param row_index row index
+        /// @param column_index column index
+        /// @return (``row_index``, ``column_index``)-element of a matrix
         T at(const int row_index, const int column_index)
         {
             if (row_index >= m_num_rows)
@@ -158,6 +218,50 @@ namespace Linalg
             }
 
             return m_matrix.at(row_index).at(column_index);
+        }
+
+        /// @brief function that sets seed of random by now time
+        void setSeed()
+        {
+            srand(static_cast<unsigned int>(time(NULL)));
+        }
+
+        /// @brief function that sets seed of random
+        /// @param seed seed
+        void setSeed(const unsigned int seed)
+        {
+            srand(seed);
+        }
+
+        /// @brief function that generates random vector
+        void random()
+        {
+            for (int i = 0, j; i < m_num_rows; ++i)
+            {
+                for (j = 0; j < m_num_columns; ++j)
+                {
+                    m_matrix.at(i).at(j) = rand();
+                }
+            }
+        }
+
+        /// @brief function that generates random vector
+        /// @param lower_bound lower bound of elements
+        /// @param upper_bound upper bound of elements
+        void random(const double lower_bound, const double upper_bound)
+        {
+            if (lower_bound > upper_bound)
+            {
+                throw std::runtime_error("lower bound is greater than upper bound");
+            }
+
+            for (int i = 0, j; i < m_num_rows; ++i)
+            {
+                for (j = 0; j < m_num_columns; ++j)
+                {
+                    m_matrix.at(i).at(j) = lower_bound + (upper_bound - lower_bound) * static_cast<double>(rand()) / RAND_MAX;
+                }
+            }
         }
 
         /// @brief function that sets row and column
@@ -189,14 +293,28 @@ namespace Linalg
         }
 
         /// @brief function that tests that a matrix is regular or not
-        /// @return 
+        /// @return returns true if a matrix is regular, false if is not regular
         bool isRegular()
         {
-            if(m_num_rows != m_num_columns)
+            if (m_num_rows != m_num_columns)
             {
                 return false;
             }
-            else if(std::abs(det()) < EPSILON)
+            else if (std::abs(det()) < EPSILON)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// @brief function that tests a matrix is square or not
+        /// @return true if a matrix is square, false if is not square
+        bool isSquare()
+        {
+            if (m_num_columns == m_num_rows)
             {
                 return true;
             }
@@ -495,7 +613,9 @@ namespace Linalg
             return temp_determinant;
         }
 
-        Matrix<T> coFactor()
+        /// @brief function that computes adjugate of a matrix
+        /// @return adjugate matrix
+        Matrix<T> adjugate()
         {
             Matrix<T> matrix;
             matrix.setDimension(m_num_rows, m_num_columns);
@@ -510,16 +630,18 @@ namespace Linalg
             return matrix;
         }
 
+        /// @brief function that computes inverse of a matrix
+        /// @return inverse matrix
         Matrix<double> inverse()
         {
-            if(isRegular())
+            if (isRegular())
             {
                 throw std::runtime_error("inverse matrix of non-regular matrix is not defined");
             }
 
             Matrix<T> matrix;
             matrix.setDimension(m_num_rows, m_num_columns);
-            matrix = coFactor();
+            matrix = adjugate();
 
             return matrix.cast<double>() * (1.0 / det());
         }
