@@ -5,7 +5,8 @@
 int main()
 {
 	Linalg::Vector<int> vec1, vec2, vec3;
-	Linalg::Matrix<float> mat1, mat2;
+	Linalg::Matrix<int> mat1;
+	Linalg::Matrix<float> mat2;
 
 	puts("Vector");
 
@@ -41,14 +42,16 @@ int main()
 	puts("\nMatrix");
 
 	// sets size of matrix
-	mat1.setIdentity(3);
+	mat1.setDiagonal(vec1);
 	mat2.setDimension(3, 3);
-	mat1.substituteRow(0, vec1.cast<float>());
+	//mat1.random(-10, 10);
+	mat1.substituteRow(0, vec1);
 	mat2.random(-10, 10);
 	mat1.print();
+	mat2.print();
 
 	puts("sum");
-	(mat1 + mat2).print();
+	(mat1.cast<float>() + mat2).print();
 
 	// determinant
 	puts("\ndeterminant:");
@@ -72,6 +75,6 @@ int main()
 
 	// power
 	puts("\nqubic");
-	mat1.power(3).print();
+	mat1.power(3).print("TeX");
 	return 0;
 }

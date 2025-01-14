@@ -4,10 +4,11 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <string.h>
 
 #include "Vector.h"
 
-#define EPSILON 0.0000000001
+#define EPSILON 1e-6
 
 namespace Linalg
 {
@@ -192,13 +193,81 @@ namespace Linalg
         /// @brief function that prints a matrix
         void print()
         {
+            std::cout << "[";
             for (int i = 0, j; i < m_num_rows; ++i)
             {
+                if (i == 0)
+                {
+                    std::cout << "[";
+                }
+                else
+                {
+                    std::cout << "\n[";
+                }
+
                 for (j = 0; j < m_num_columns; ++j)
                 {
-                    std::cout << m_matrix.at(i).at(j) << " ";
+                    std::cout << m_matrix.at(i).at(j) << ", ";
                 }
-                std::cout << std::endl;
+                std::cout << "\b\b]" << ", ";
+            }
+            std::cout << "\b\b]" << std::endl;
+        }
+
+        /// @brief function that prints a matrix by assigned format
+        /// @param print_mode format to print
+        void print(const char *print_mode)
+        {
+            if (strcmp(print_mode, "python") == 0 || strcmp(print_mode, "py") == 0)
+            {
+                std::cout << "[";
+                for (int i = 0, j; i < m_num_rows; ++i)
+                {
+                    std::cout << "[";
+
+                    for (j = 0; j < m_num_columns; ++j)
+                    {
+                        std::cout << m_matrix.at(i).at(j) << ", ";
+                    }
+                    std::cout << "\b\b]" << ", ";
+                }
+                std::cout << "\b\b]" << std::endl;
+            }
+            else if (strcmp(print_mode, "c") == 0 || strcmp(print_mode, "C") == 0 || strcmp(print_mode, "cpp") == 0)
+            {
+                std::cout << "{";
+                for (int i = 0, j; i < m_num_rows; ++i)
+                {
+                    std::cout << "{";
+
+                    for (j = 0; j < m_num_columns; ++j)
+                    {
+                        std::cout << m_matrix.at(i).at(j) << ", ";
+                    }
+                    std::cout << "\b\b}" << ", ";
+                }
+                std::cout << "\b\b}" << std::endl;
+            }
+            else if (strcmp(print_mode, "TeX") == 0)
+            {
+                std::cout << "\\begin{pmatrix}\n";
+                for (int i = 0, j; i < m_num_rows; ++i)
+                {
+                    for (j = 0; j < m_num_columns; ++j)
+                    {
+                        std::cout << m_matrix.at(i).at(j) << " & ";
+                    }
+
+                    if (i == m_num_rows - 1)
+                    {
+                        std::cout << "\b\b" << "   \n";
+                    }
+                    else
+                    {
+                        std::cout << "\b\b\b" << "\\\\\n";
+                    }
+                }
+                std::cout << "\b\b\\end{pmatrix}" << std::endl;
             }
         }
 
@@ -240,7 +309,7 @@ namespace Linalg
             {
                 for (j = 0; j < m_num_columns; ++j)
                 {
-                    m_matrix.at(i).at(j) = rand();
+                    substitute(i, j, rand());
                 }
             }
         }
@@ -259,7 +328,7 @@ namespace Linalg
             {
                 for (j = 0; j < m_num_columns; ++j)
                 {
-                    m_matrix.at(i).at(j) = lower_bound + (upper_bound - lower_bound) * static_cast<double>(rand()) / RAND_MAX;
+                    substitute(i, j, lower_bound + (upper_bound - lower_bound) * static_cast<double>(rand()) / RAND_MAX);
                 }
             }
         }
@@ -292,6 +361,27 @@ namespace Linalg
             }
         }
 
+        /// @brief function that sets a diagonal elements of a matrix by a vector
+        /// @param diagonal_vector diagonal elements
+        void setDiagonal(Vector<T> diagonal_vector)
+        {
+            setDimension(diagonal_vector.length(), diagonal_vector.length());
+            for (int i = 0, j; i < rows(); ++i)
+            {
+                for (j = 0; j < columns(); ++j)
+                {
+                    if (i == j)
+                    {
+                        substitute(i, j, diagonal_vector.at(i));
+                    }
+                    else
+                    {
+                        substitute(i, j, 0);
+                    }
+                }
+            }
+        }
+
         /// @brief function that tests that a matrix is regular or not
         /// @return returns true if a matrix is regular, false if is not regular
         bool isRegular()
@@ -315,6 +405,65 @@ namespace Linalg
         bool isSquare()
         {
             if (m_num_columns == m_num_rows)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /// @brief function that tests that a matrix is dianonal or not
+        /// @return true if a matrix is diagonal, false if is not diagonal
+        bool isDiagonal()
+        {
+            if (!isSquare())
+            {
+                return false;
+            }
+            else
+            {
+                for (int i = 0, j; i < m_num_rows; ++i)
+                {
+                    for (j = 0; j < m_num_columns; ++j)
+                    {
+                        if (i != j)
+                        {
+                            if (std::abs(at(i, j)) >= EPSILON)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+        
+        /// @brief function that tests that a matrix is uni-modular or not
+        /// @return true if a matrix is uni-modular, false if is not uni-modular
+        bool isUniModular()
+        {
+            if (!isRegular)
+            {
+                return false;
+            }
+
+            for (int i = 0, j; i < m_num_rows; ++i)
+            {
+                for (j = 0; j < m_num_columns; ++j)
+                {
+                    if (std::abs(round(at(i, j)) - at(i, j)) >= EPSILON)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            T temp = determinant();
+
+            if (std::abs(temp - 1) < EPSILON || std::abs(temp + 1) < EPSILON)
             {
                 return true;
             }
@@ -474,7 +623,7 @@ namespace Linalg
 
         /// @brief computes determinant of a matrix
         /// @return determinant of a matrix
-        T det()
+        T determinant()
         {
             if (m_num_rows != m_num_columns)
             {
@@ -524,9 +673,9 @@ namespace Linalg
 
         /// @brief function that computes determinant of a matirx
         /// @return determinant of a matirx
-        T determinant()
+        T det()
         {
-            return det();
+            return determinant();
         }
 
         /// @brief computes transpose of a matrix
@@ -559,7 +708,7 @@ namespace Linalg
             T S = 0;
             for (int i = 0; i < std::min(m_num_rows, m_num_columns); ++i)
             {
-                S += m_matrix.at(i).at(i);
+                S += at(i, i);
             }
             return S;
         }

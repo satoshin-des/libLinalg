@@ -121,11 +121,12 @@ namespace Linalg
         /// @brief function that prints a vector
         void print()
         {
+            std::cout << "[";
             for (int i = 0; i < m_length; ++i)
             {
-                std::cout << m_vector.at(i) << " ";
+                std::cout << m_vector.at(i) << ", ";
             }
-            std::cout << std::endl;
+            std::cout << "\b\b]" << std::endl;
         }
 
         /// @brief function that sets length of a vector
